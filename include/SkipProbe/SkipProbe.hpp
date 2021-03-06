@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "Hash.hpp"
 #include "Node.hpp"
 
@@ -10,11 +12,6 @@ namespace SkipProbe
 }
 
 #include "Iterator.hpp"
-
-// Visual Studio 2019 requires explicitly including <stdexcept> to see the definition of std::out_of_range.
-#if defined(_MSC_VER) && _MSC_VER >= 1920
-	#include <stdexcept>
-#endif
 
 template<typename t_KeyType, typename t_ValueType, typename t_Hash, typename t_Compare, typename t_Allocator>
 class SkipProbe::HashMap
