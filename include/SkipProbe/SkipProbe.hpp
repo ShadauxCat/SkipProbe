@@ -1,7 +1,5 @@
 #pragma once
 
-#include <utility>
-
 #include "Hash.hpp"
 #include "Node.hpp"
 
@@ -12,6 +10,11 @@ namespace SkipProbe
 }
 
 #include "Iterator.hpp"
+
+// Visual Studio 2019 requires explicitly including <stdexcept> to see the definition of std::out_of_range.
+#if defined(_MSC_VER) && _MSC_VER >= 1920
+	#include <stdexcept>
+#endif
 
 template<typename t_KeyType, typename t_ValueType, typename t_Hash, typename t_Compare, typename t_Allocator>
 class SkipProbe::HashMap
@@ -29,7 +32,7 @@ public:
 	using hasher = t_Hash;
 	using key_equal = t_Compare;
 	using allocator_type = t_Allocator;
-	using reference = value_type &;
+	using reference = value_type&;
 	using const_reference = value_type const&;
 	using pointer = typename std::allocator_traits<t_Allocator>::pointer;
 	using const_pointer = typename std::allocator_traits<t_Allocator>::const_pointer;
@@ -426,7 +429,7 @@ public:
 
 	double MaxLoadFactor() const noexcept
 	{
-		return 0.75f;
+		return 0.75;
 	}
 
 	size_t Reserve(size_t numItems)
