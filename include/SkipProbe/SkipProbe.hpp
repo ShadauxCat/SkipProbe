@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility>
+#include <stdexcept>
 
 #include "Hash.hpp"
 #include "Node.hpp"
@@ -29,7 +29,7 @@ public:
 	using hasher = t_Hash;
 	using key_equal = t_Compare;
 	using allocator_type = t_Allocator;
-	using reference = value_type &;
+	using reference = value_type&;
 	using const_reference = value_type const&;
 	using pointer = typename std::allocator_traits<t_Allocator>::pointer;
 	using const_pointer = typename std::allocator_traits<t_Allocator>::const_pointer;
@@ -426,7 +426,7 @@ public:
 
 	double MaxLoadFactor() const noexcept
 	{
-		return 0.75f;
+		return 0.75;
 	}
 
 	size_t Reserve(size_t numItems)

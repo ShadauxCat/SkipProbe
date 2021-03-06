@@ -197,7 +197,7 @@ public:
 #if defined(_WIN64) || defined(_M_X64) || defined(__x86_64__)
 		return Murmur3::HashInt64(uint64_t(value));
 #else
-		return Murmur3::HashInt64(uint64_t(value)) % std::numeric_limits<size_t>::max();
+		return size_t(Murmur3::HashInt64(uint64_t(value))) % std::numeric_limits<size_t>::max();
 #endif
 	}
 };
