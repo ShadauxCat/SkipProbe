@@ -119,7 +119,7 @@ inline /*static*/ size_t SkipProbe::detail_::HashImpl<t_Hashable, t_Enable>::Com
 }
 
 template<typename t_Hashable>
-size_t SkipProbe::Hash::operator()(t_Hashable const& value) const noexcept
+size_t SkipProbe::Hash<t_Hashable>::operator()(t_Hashable const& value) const noexcept
 {
 	return detail_::HashImpl<adjusted_type>::Compute(value);
 }
