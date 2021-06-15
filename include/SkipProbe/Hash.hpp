@@ -118,14 +118,30 @@ template<typename t_IntegerType>
 class SkipProbe::detail_::HashImpl<t_IntegerType, typename std::enable_if<std::is_integral<t_IntegerType>::value && sizeof(t_IntegerType) <= 4>::type>
 {
 public:
-	static size_t Compute(t_IntegerType const& value) noexcept;
+    static size_t Compute(t_IntegerType const& value) noexcept {
+        // 32-bit integers use FNV rather than Murmur3 integer finisher due to superior performance characteristics.
+        size_t                     result = c_fnvOffset;
+        unsigned char const* const c      = reinterpret_cast<unsigned char const* const>(&value);
+        for (size_t i = 0; i < sizeof(value); ++i) {
+            result ^= static_cast<size_t>(c[i]);
+            result *= c_fnvPrime;
+        }
+
+        return size_t(result);
+    }
 };
 
 template<typename t_IntegerType>
 class SkipProbe::detail_::HashImpl<t_IntegerType, typename std::enable_if<std::is_integral<t_IntegerType>::value && sizeof(t_IntegerType) == 8>::type>
 {
 public:
-	static size_t Compute(t_IntegerType const& value) noexcept;
+    static size_t Compute(t_IntegerType const& value) noexcept {
+#if defined(_WIN64) || defined(_M_X64) || defined(__x86_64__)
+        return Murmur3::HashInt64(uint64_t(value));
+#else
+        return size_t(Murmur3::HashInt64(uint64_t(value))) % std::numeric_limits<size_t>::max();
+#endif
+    }
 };
 
 // Floating point types
