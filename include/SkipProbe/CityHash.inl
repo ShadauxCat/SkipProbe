@@ -41,7 +41,7 @@
 #define CITYHASH_bswap_32(x) _byteswap_ulong(x)
 #define CITYHASH_bswap_64(x) _byteswap_uint64(x)
 
-#elif defined(__ORBIS__)
+#elif defined(__ORBIS__) || defined(__PROSPERO__)
 
 #include <machine/endian.h>
 #define CITYHASH_bswap_32(x) __bswap32(x)
