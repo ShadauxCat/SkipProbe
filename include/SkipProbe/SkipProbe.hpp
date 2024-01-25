@@ -56,32 +56,32 @@ public:
 	HashMap(t_Hash hash = t_Hash(), t_Compare compare = t_Compare(), t_Allocator allocator = t_Allocator())
 		: m_allocator(allocator)
 		, m_count(0)
-		, m_bucketSize(8)
-		, m_list(m_allocator.allocate(m_bucketSize))
+		, m_bucketCount(8)
+		, m_list(m_allocator.allocate(m_bucketCount))
 		, m_hash(hash)
 		, m_compare(compare)
 	{
-		memset(m_list, 0, m_bucketSize * sizeof(Node));
+		memset(m_list, 0, m_bucketCount * sizeof(Node));
 	}
 
 	explicit HashMap(t_Allocator allocator)
 		: m_allocator(allocator)
 		, m_count(0)
-		, m_bucketSize(8)
-		, m_list(m_allocator.allocate(m_bucketSize))
+		, m_bucketCount(8)
+		, m_list(m_allocator.allocate(m_bucketCount))
 	{
-		memset(m_list, 0, m_bucketSize * sizeof(Node));
+		memset(m_list, 0, m_bucketCount * sizeof(Node));
 	}
-	
+
 	HashMap(std::initializer_list<std::pair<t_KeyType, t_ValueType>> list, t_Hash hash = t_Hash(), t_Compare compare = t_Compare(), t_Allocator allocator = t_Allocator())
 		: m_allocator(allocator)
 		, m_count(0)
-		, m_bucketSize(nearestPowerOf2_(list.size()))
-		, m_list(m_allocator.allocate(m_bucketSize))
+		, m_bucketCount(nearestPowerOf2_(list.size()))
+		, m_list(m_allocator.allocate(m_bucketCount))
 		, m_hash(hash)
 		, m_compare(compare)
 	{
-		memset(m_list, 0, m_bucketSize * sizeof(Node));
+		memset(m_list, 0, m_bucketCount * sizeof(Node));
 		for (auto& pair : list)
 		{
 			Insert(pair.first, pair.first);
@@ -91,12 +91,12 @@ public:
 	HashMap(HashMap const& other)
 		: m_allocator(other.m_allocator)
 		, m_count(0)
-		, m_bucketSize(other.m_bucketSize)
-		, m_list(m_allocator.allocate(m_bucketSize))
+		, m_bucketCount(other.m_bucketCount)
+		, m_list(m_allocator.allocate(m_bucketCount))
 		, m_hash(other.m_hash)
 		, m_compare(other.m_compare)
 	{
-		memset(m_list, 0, m_bucketSize * sizeof(Node));
+		memset(m_list, 0, m_bucketCount * sizeof(Node));
 		for (auto& node : other)
 		{
 			Insert(node.key, node.value);
@@ -106,7 +106,7 @@ public:
 	HashMap(HashMap&& other)
 		: m_allocator(std::move(other.m_allocator))
 		, m_count(other.m_count)
-		, m_bucketSize(other.m_bucketSize)
+		, m_bucketCount(other.m_bucketCount)
 		, m_list(other.m_list)
 		, m_collisions(other.m_collisions)
 		, m_hash(std::move(other.m_hash))
@@ -114,9 +114,9 @@ public:
 	{
 		other.m_list = other.m_allocator.allocate(8);
 		other.m_count = 0;
-		other.m_bucketSize = 8;
+		other.m_bucketCount = 8;
 		other.m_collisions = 0;
-		memset(other.m_list, 0, m_bucketSize * sizeof(Node));
+		memset(other.m_list, 0, m_bucketCount * sizeof(Node));
 	}
 
 	HashMap& operator=(HashMap const& other)
@@ -136,17 +136,17 @@ public:
 
 		m_allocator = std::move(other.m_allocator);
 		m_count = other.m_count;
-		m_bucketSize = other.m_bucketSize;
+		m_bucketCount = other.m_bucketCount;
 		m_list = other.m_list;
 		m_collisions = other.m_collisions;
 		m_hash = std::move(other.m_hash);
 		m_compare = std::move(other.m_compare);
 
 		other.m_count = 0;
-		other.m_bucketSize = 8;
+		other.m_bucketCount = 8;
 		other.m_list = other.m_allocator.allocate(8);
 		other.m_collisions = 0;
-		memset(other.m_list, 0, other.m_bucketSize * sizeof(Node));
+		memset(other.m_list, 0, other.m_bucketCount * sizeof(Node));
 
 		return *this;
 	}
@@ -168,7 +168,7 @@ public:
 		{
 			++node;
 		}
-		return Iterator(node, m_list + m_bucketSize);
+		return Iterator(node, m_list + m_bucketCount);
 	}
 
 	ConstIterator begin() const noexcept
@@ -188,12 +188,12 @@ public:
 		{
 			++node;
 		}
-		return ConstIterator(node, m_list + m_bucketSize);
+		return ConstIterator(node, m_list + m_bucketCount);
 	}
 
 	Iterator end() noexcept
 	{
-		return Iterator(m_list + m_bucketSize, m_list + m_bucketSize);
+		return Iterator(m_list + m_bucketCount, m_list + m_bucketCount);
 	}
 
 	ConstIterator end() const noexcept
@@ -203,7 +203,7 @@ public:
 
 	ConstIterator cend() const noexcept
 	{
-		return ConstIterator(m_list + m_bucketSize, m_list + m_bucketSize);
+		return ConstIterator(m_list + m_bucketCount, m_list + m_bucketCount);
 	}
 
 	bool Empty() const noexcept
@@ -222,20 +222,20 @@ public:
 		{
 			destroy_();
 
-			m_bucketSize = 8;
+			m_bucketCount = 8;
 			m_list = m_allocator.allocate(8);
 			m_count = 0;
 			m_collisions = 0;
-			memset(m_list, 0, m_bucketSize * sizeof(Node));
+			memset(m_list, 0, m_bucketCount * sizeof(Node));
 		}
 	}
 
 	template<typename t_KeyReferenceType, typename t_ValueReferenceType>
 	void Insert(t_KeyReferenceType&& key, t_ValueReferenceType&& value)
 	{
-		if (m_count >= m_bucketSize * 0.75)
+		if (m_count >= m_bucketCount * 0.75)
 		{
-			resize_(m_bucketSize * 2);
+			resize_(m_bucketCount * 2);
 		}
 		size_t hashResult = m_hash(key);
 		doInsert_(std::forward<t_KeyReferenceType>(key), std::forward<t_ValueReferenceType>(value), hashResult);
@@ -244,9 +244,9 @@ public:
 	template<typename t_KeyReferenceType, typename t_ValueReferenceType>
 	void Upsert(t_KeyReferenceType&& key, t_ValueReferenceType&& value)
 	{
-		if (m_count >= m_bucketSize * 0.75)
+		if (m_count >= m_bucketCount * 0.75)
 		{
-			resize_(m_bucketSize * 2);
+			resize_(m_bucketCount * 2);
 		}
 		size_t hashResult = m_hash(key);
 		doUpsert_(std::forward<t_KeyReferenceType>(key), std::forward<t_ValueReferenceType>(value), hashResult);
@@ -256,30 +256,30 @@ public:
 	template<typename t_KeyReferenceType, typename t_ValueReferenceType>
 	InsertResult CheckedInsert(t_KeyReferenceType&& key, t_ValueReferenceType&& value)
 	{
-		if (m_count >= m_bucketSize * 0.75)
+		if (m_count >= m_bucketCount * 0.75)
 		{
-			resize_(m_bucketSize * 2);
+			resize_(m_bucketCount * 2);
 		}
 		size_t hashResult = m_hash(key);
 		auto result = doInsert_(std::forward<t_KeyReferenceType>(key), std::forward<t_ValueReferenceType>(value), hashResult);
-		return { Iterator(result.node, m_list + m_bucketSize), result.wasInserted };
+		return { Iterator(result.node, m_list + m_bucketCount), result.wasInserted };
 	}
 
 	template<typename t_KeyReferenceType, typename t_ValueReferenceType>
 	InsertResult CheckedUpsert(t_KeyReferenceType&& key, t_ValueReferenceType&& value)
 	{
-		if (m_count >= m_bucketSize * 0.75)
+		if (m_count >= m_bucketCount * 0.75)
 		{
-			resize_(m_bucketSize * 2);
+			resize_(m_bucketCount * 2);
 		}
 		size_t hashResult = m_hash(key);
 		auto result = doUpsert_(std::forward<t_KeyReferenceType>(key), std::forward<t_ValueReferenceType>(value), hashResult);
-		return { Iterator(result.node, m_list + m_bucketSize), result.wasInserted };
+		return { Iterator(result.node, m_list + m_bucketCount), result.wasInserted };
 	}
 
 	bool Delete(t_KeyType const& key) noexcept
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		return removeNode_(key, location);
 	}
 
@@ -287,7 +287,7 @@ public:
 	{
 		t_Allocator allocator = other.m_allocator;
 		size_t count = other.m_count;
-		size_t bucketSize = other.m_bucketSize;
+		size_t bucketSize = other.m_bucketCount;
 		Node* list = other.m_list;
 		size_t collisions = other.m_collisions;
 		t_Hash hash = other.m_hash;
@@ -295,7 +295,7 @@ public:
 
 		other.m_allocator = m_allocator;
 		other.m_count = m_count;
-		other.m_bucketSize = m_bucketSize;
+		other.m_bucketCount = m_bucketCount;
 		other.m_list = m_list;
 		other.m_collisions = m_collisions;
 		other.m_hash = m_hash;
@@ -303,7 +303,7 @@ public:
 
 		m_allocator = allocator;
 		m_count = count;
-		m_bucketSize = bucketSize;
+		m_bucketCount = bucketSize;
 		m_list = list;
 		m_collisions = collisions;
 		m_hash = hash;
@@ -312,9 +312,9 @@ public:
 
 	t_ValueType& Get(t_KeyType const& key)
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* result = findNode_(key, location);
-		if (result != m_list + m_bucketSize)
+		if (result != m_list + m_bucketCount)
 		{
 			return result->value;
 		}
@@ -323,9 +323,9 @@ public:
 
 	t_ValueType const& Get(t_KeyType const& key) const
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* result = findNode_(key, location);
-		if (result != m_list + m_bucketSize)
+		if (result != m_list + m_bucketCount)
 		{
 			return result->value;
 		}
@@ -334,9 +334,9 @@ public:
 
 	t_ValueType& Get(t_KeyType const& key, t_ValueType& defaultValue) noexcept
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* result = findNode_(key, location);
-		if (result != m_list + m_bucketSize)
+		if (result != m_list + m_bucketCount)
 		{
 			return result->value;
 		}
@@ -345,9 +345,9 @@ public:
 
 	t_ValueType const& Get(t_KeyType const& key, t_ValueType const& defaultValue) const noexcept
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* result = findNode_(key, location);
-		if (result != m_list + m_bucketSize)
+		if (result != m_list + m_bucketCount)
 		{
 			return result->value;
 		}
@@ -356,9 +356,9 @@ public:
 
 	t_ValueType& operator[](t_KeyType const& key)
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* result = findNode_(key, location);
-		if (result != m_list + m_bucketSize)
+		if (result != m_list + m_bucketCount)
 		{
 			return result->value;
 		}
@@ -369,9 +369,9 @@ public:
 
 	Iterator find(t_KeyType const& key) noexcept
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* node = findNode_(key, location);
-		return Iterator(node, m_list + m_bucketSize);
+		return Iterator(node, m_list + m_bucketCount);
 	}
 
 	ConstIterator find(t_KeyType const& key) const noexcept
@@ -381,26 +381,30 @@ public:
 
 	ConstIterator cfind(t_KeyType const& key) const noexcept
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* node = findNode_(key, location);
-		return ConstIterator(node, m_list + m_bucketSize);
+		return ConstIterator(node, m_list + m_bucketCount);
 	}
 
 	bool Contains(t_KeyType const& key) const noexcept
 	{
-		size_t location = m_hash(key) & (m_bucketSize - 1);
+		size_t location = m_hash(key) & (m_bucketCount - 1);
 		Node* result = findNode_(key, location);
-		return (result != m_list + m_bucketSize);
+		return (result != m_list + m_bucketCount);
 	}
 
 	size_t BucketCount() const noexcept
 	{
-		return m_bucketSize;
+		return m_bucketCount;
 	}
 
 	size_t BucketSize(size_t n) const noexcept
 	{
-		Node* node = m_list[n];
+		if (n >= m_bucketCount)
+		{
+			return 0;
+		}
+		Node* node = &m_list[n];
 		if (node->firstInBucket != node)
 		{
 			return 0;
@@ -411,17 +415,17 @@ public:
 			++result;
 			node = node->nextInBucket;
 		}
-		return node;
+		return result;
 	}
 
 	size_t Bucket(t_KeyType const& key) const noexcept
 	{
-		return m_hash(key) & (m_bucketSize - 1);
+		return m_hash(key) & (m_bucketCount - 1);
 	}
 
 	double LoadFactor() const noexcept
 	{
-		return double(m_count) / double(m_bucketSize);
+		return double(m_count) / double(m_bucketCount);
 	}
 
 	double MaxLoadFactor() const noexcept
@@ -433,22 +437,22 @@ public:
 	{
 		size_t minimumSize = size_t(numItems * 1.3333333333333333);
 		size_t newSize = nearestPowerOf2_(minimumSize);
-		if (newSize > m_bucketSize)
+		if (newSize > m_bucketCount)
 		{
 			resize_(newSize);
 		}
-		return m_bucketSize;
+		return m_bucketCount;
 	}
 
 	size_t TrimToFit(size_t numItems = 0)
 	{
 		size_t minimumSize = size_t(std::max(m_count, numItems) * 1.3333333333333333);
 		size_t newSize = nearestPowerOf2_(minimumSize);
-		if (newSize != m_bucketSize)
+		if (newSize != m_bucketCount)
 		{
 			resize_(newSize);
 		}
-		return m_bucketSize;
+		return m_bucketCount;
 	}
 
 	bool operator==(HashMap const& other) const
@@ -459,7 +463,7 @@ public:
 		}
 		for (auto& node : other)
 		{
-			size_t location = m_hash(node.key) & (m_bucketSize - 1);
+			size_t location = m_hash(node.key) & (m_bucketCount - 1);
 			Node* thisNode = findNode_(node.key, location);
 			if (thisNode == nullptr || thisNode->value != node.value)
 			{
@@ -505,14 +509,14 @@ protected:
 	void resize_(size_t newBucketSize)
 	{
 		Node* oldList = m_list;
-		size_t oldSize = m_bucketSize;
+		size_t oldSize = m_bucketCount;
 
 		m_list = m_allocator.allocate(newBucketSize);
 		m_count = 0;
-		m_bucketSize = newBucketSize;
+		m_bucketCount = newBucketSize;
 		m_collisions = 0;
 
-		memset(m_list, 0, m_bucketSize * sizeof(Node));
+		memset(m_list, 0, m_bucketCount * sizeof(Node));
 
 		for (Node* node = oldList; node < oldList + oldSize; ++node)
 		{
@@ -528,7 +532,7 @@ protected:
 
 	void destroy_() noexcept
 	{
-		for (Node* node = m_list; node < m_list + m_bucketSize; ++node)
+		for (Node* node = m_list; node < m_list + m_bucketCount; ++node)
 		{
 			if (node->firstInBucket != nullptr)
 			{
@@ -536,20 +540,20 @@ protected:
 				node->value.~t_ValueType();
 			}
 		}
-		m_allocator.deallocate(m_list, m_bucketSize);
+		m_allocator.deallocate(m_list, m_bucketCount);
 	}
 
 	template<typename t_KeyReferenceType, typename t_ValueReferenceType>
 	InsertNodeResult doInsert_(t_KeyReferenceType&& key, t_ValueReferenceType&& value, size_t hash) noexcept
 	{
-		size_t location = hash & (m_bucketSize - 1);
+		size_t location = hash & (m_bucketCount - 1);
 		return findNodeForInsert_(std::forward<t_KeyReferenceType>(key), std::forward<t_ValueReferenceType>(value), hash, location);
 	}
 
 	template<typename t_KeyReferenceType, typename t_ValueReferenceType>
 	InsertNodeResult doUpsert_(t_KeyReferenceType&& key, t_ValueReferenceType&& value, size_t hash) noexcept
 	{
-		size_t location = hash & (m_bucketSize - 1);
+		size_t location = hash & (m_bucketCount - 1);
 		auto result = findNodeForInsert_(std::forward<t_KeyReferenceType>(key), std::forward<t_ValueReferenceType>(value), hash, location);
 		if (!result.wasInserted)
 		{
@@ -572,7 +576,7 @@ protected:
 				node = node->nextInBucket;
 			} while (node != nullptr);
 		}
-		return m_list + m_bucketSize;
+		return m_list + m_bucketCount;
 	}
 
 	bool removeNode_(t_KeyType const& key, size_t bucketRemoveLocation) noexcept
@@ -665,7 +669,7 @@ protected:
 		while (node->firstInBucket != nullptr)
 		{
 			node = node->firstInBucket->lastInBucket + 1;
-			if (node >= m_list + m_bucketSize)
+			if (node >= m_list + m_bucketCount)
 			{
 				node = m_list;
 			}
@@ -744,7 +748,7 @@ protected:
 	}
 	t_Allocator m_allocator;
 	size_t m_count;
-	size_t m_bucketSize;
+	size_t m_bucketCount;
 	Node* m_list;
 	size_t m_collisions{ 0 };
 	t_Hash m_hash;
