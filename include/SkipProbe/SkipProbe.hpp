@@ -72,7 +72,7 @@ public:
 	{
 		memset(m_list, 0, m_bucketSize * sizeof(Node));
 	}
-	
+
 	HashMap(std::initializer_list<std::pair<t_KeyType, t_ValueType>> list, t_Hash hash = t_Hash(), t_Compare compare = t_Compare(), t_Allocator allocator = t_Allocator())
 		: m_allocator(allocator)
 		, m_count(0)
@@ -405,10 +405,8 @@ public:
 		{
 			return 0;
 		}
-		size_t result = 0;
 		while (node != nullptr)
 		{
-			++result;
 			node = node->nextInBucket;
 		}
 		return node;
