@@ -603,7 +603,7 @@ protected:
 			// Which means it needs to be moved into this node's position in the array
 			// so we can do lookups on it.
 			Node* nextNode = removeNode->nextInBucket;
-			if (removeNode->nextInBucket != nullptr)
+			if (nextNode != nullptr)
 			{
 				removeNode->nextInBucket = nextNode->nextInBucket;
 				removeNode->key = std::move(nextNode->key);
@@ -626,6 +626,8 @@ protected:
 				removeNode->key.~t_KeyType();
 				removeNode->value.~t_ValueType();
 				removeNode->firstInBucket = nullptr;
+				removeNode->nextInBucket = nullptr;
+				removeNode->prevInBucket = nullptr;
 				removeNode->lastInBucket = nullptr;
 			}
 			--m_count;
@@ -654,8 +656,10 @@ protected:
 		{
 			removeNode->nextInBucket->prevInBucket = removeNode->prevInBucket;
 		}
+		removeNode->firstInBucket = nullptr;
 		removeNode->nextInBucket = nullptr;
 		removeNode->prevInBucket = nullptr;
+		removeNode->lastInBucket = nullptr;
 		removeNode->key.~t_KeyType();
 		removeNode->value.~t_ValueType();
 	}
